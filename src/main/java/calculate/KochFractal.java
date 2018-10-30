@@ -4,6 +4,7 @@
  */
 package calculate;
 
+import javafx.beans.Observable;
 import javafx.scene.paint.Color;
 
 /**
@@ -11,7 +12,9 @@ import javafx.scene.paint.Color;
  * @author Peter Boots
  * Modified for FUN3 by Gertjan Schouten
  */
-public class KochFractal {
+public class KochFractal
+        //implements Observable
+{
 
     private int level = 1;      // The current level of the fractal
     private int nrOfEdges = 3;  // The number of edges in the current level of the fractal
