@@ -13,6 +13,7 @@ public class GenerateLeftEdge implements Runnable
     public GenerateLeftEdge(KochManager ma, int nxt)
     {
         edges = new ArrayList<>();
+        edges = null;
         koch = new KochFractal(ma);
         koch.setLevel(nxt);
 
@@ -23,6 +24,10 @@ public class GenerateLeftEdge implements Runnable
     public void run()
     {
         koch.generateLeftEdge();
+        if(edges != null)
+        {
+            manager.addAllEdges(edges);
+        }
         done = true;
     }
 }

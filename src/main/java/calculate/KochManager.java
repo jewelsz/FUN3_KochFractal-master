@@ -62,9 +62,6 @@ public class KochManager
         thread2.start();
         thread3.start();
 
-        edges.addAll(leftEdge.edges);
-        edges.addAll(bottomEdge.edges);
-        edges.addAll(rightEdge.edges);
 
         tsCalc.setEnd("End calculating");
         application.setTextCalc(tsCalc.toString());
@@ -92,4 +89,13 @@ public class KochManager
         edges.add(e);
     }
 
+    public  void addAllEdges(ArrayList<Edge>edges)
+    {
+        edges.addAll(edges);
+    }
+
 }
+
+
+
+

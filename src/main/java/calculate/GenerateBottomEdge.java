@@ -13,6 +13,7 @@ public class GenerateBottomEdge implements Runnable
     public GenerateBottomEdge(KochManager ma, int nxt)
     {
         edges = new ArrayList<>();
+        edges = null;
         manager = ma;
         koch = new KochFractal(ma);
         koch.setLevel(nxt);
@@ -24,6 +25,10 @@ public class GenerateBottomEdge implements Runnable
     public void run()
     {
         koch.generateBottomEdge();
+        if(edges != null)
+    {
+        manager.addAllEdges(edges);
+    }
         done = true;
     }
 }
