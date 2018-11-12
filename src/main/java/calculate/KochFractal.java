@@ -4,28 +4,28 @@
  */
 package calculate;
 
-import javafx.beans.Observable;
 import javafx.scene.paint.Color;
+
+import java.util.Observable;
 
 /**
  *
  * @author Peter Boots
  * Modified for FUN3 by Gertjan Schouten
  */
-public class KochFractal
-        //implements Observable
+public class KochFractal extends Observable
+    //subject
 {
 
     private int level = 1;      // The current level of the fractal
     private int nrOfEdges = 3;  // The number of edges in the current level of the fractal
     private float hue;          // Hue value of color for next edge
     private boolean cancelled;  // Flag to indicate that calculation has been cancelled
-    private boolean edgeAdded;
-    private KochManager manager;
+
+      private KochManager manager;
 
     public KochFractal(KochManager manager) {
         this.manager = manager;
-        edgeAdded = true;
     }
 
     private void drawKochEdge(double ax, double ay, double bx, double by, int n) {
@@ -33,11 +33,9 @@ public class KochFractal
             if (n == 1) {
                 hue = hue + 1.0f / nrOfEdges;
                 Edge e = new Edge(ax, ay, bx, by, Color.hsb(hue*360.0, 1.0, 1.0));
-                synchronized(manager) {
-                    manager.addEdge(e);
-                    }
 
-                    //addEdge((e)); //synchronized
+                setChanged();
+                notifyObservers(e);
 
             } else {
                 double angle = Math.PI / 3.0 + Math.atan2(by - ay, bx - ax);
@@ -53,21 +51,7 @@ public class KochFractal
             }
         }
     }
-/*
-    public synchronized void addEdge(Edge edge) {
-        if (!edgeAdded) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                System.out.println("InterruptedException caught");
-            }
-        }
-        edgeAdded = false;
-        manager.addEdge(edge);
-        edgeAdded = true;
-        notify();
-    }
-*/
+
 
     public void generateLeftEdge() {
         hue = 0f;

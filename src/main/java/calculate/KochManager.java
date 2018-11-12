@@ -4,8 +4,11 @@
  */
 package calculate;
 
-import java.util.ArrayList;
+import java.util.*;
+import java.util.concurrent.*;
+
 import fun3kochfractalfx.FUN3KochFractalFX;
+import javafx.application.Platform;
 import timeutil.TimeStamp;
 
 /**
@@ -20,57 +23,54 @@ public class KochManager
     private Thread thread3;
 
 
-    public GenerateBottomEdge bottomEdge;
-    public GenerateLeftEdge leftEdge;
-    public GenerateRightEdge rightEdge;
+    private GenerateEdge bottomEdge;
+    private GenerateEdge leftEdge;
+    private GenerateEdge rightEdge;
 
-    //private KochFractal koch;
+    private boolean isCancelled;
+
+    private KochFractal koch;
     private ArrayList<Edge> edges;
     private FUN3KochFractalFX application;
     private TimeStamp tsCalc;
     private TimeStamp tsDraw;
 
-    public static boolean abort = false;
+    private ExecutorService pool;
+
+    private int threadCount;
 
     public KochManager(FUN3KochFractalFX application)
     {
-        this.edges = new ArrayList<Edge>();
-        //this.koch = new KochFractal(this);
+        this.koch = new KochFractal(this);
         this.application = application;
+        pool = Executors.newFixedThreadPool(3);
+
+        isCancelled = false;
+        this.edges = new ArrayList<>();
+
         this.tsCalc = new TimeStamp();
         this.tsDraw = new TimeStamp();
+
+        threadCount = 0;
     }
 
     public void changeLevel(int nxt)
     {
+        this.isCancelled = false;
+        koch.setLevel(nxt);
         edges.clear();
         tsCalc.init();
         tsCalc.setBegin("Begin calculating");
 
         //Instantiate classes
-        bottomEdge = new GenerateBottomEdge(this, nxt);
-        leftEdge = new GenerateLeftEdge(this, nxt);
-        rightEdge = new GenerateRightEdge(this, nxt);
+        bottomEdge = new GenerateEdge(this, nxt, EdgeType.BOTTOM);
+        leftEdge = new GenerateEdge(this, nxt, EdgeType.LEFT);
+        rightEdge = new GenerateEdge(this, nxt, EdgeType.RIGHT);
 
-        //Instantiate Threads
-        thread1 = new Thread(bottomEdge);
-        thread2 = new Thread(leftEdge);
-        thread3 = new Thread(rightEdge);
+        pool.submit(bottomEdge);
+        pool.submit(leftEdge);
+        pool.submit(rightEdge);
 
-        //Start Threads
-        thread1.start();
-        thread2.start();
-        thread3.start();
-
-
-        tsCalc.setEnd("End calculating");
-        application.setTextCalc(tsCalc.toString());
-
-        drawEdges();
-
-        thread1 = null;
-        thread2 = null;
-        thread3 = null;
     }
 
     public void drawEdges()
@@ -85,13 +85,59 @@ public class KochManager
         application.setTextDraw(tsDraw.toString());
     }
 
-    public void addEdge(Edge e) {
-        edges.add(e);
+
+    public void cancel()
+    {
+        this.isCancelled = true;
+        bottomEdge.cancel(true);
+        leftEdge.cancel(true);
+        rightEdge.cancel(true);
     }
 
-    public  void addAllEdges(ArrayList<Edge>edges)
+    public boolean isCancelled()
     {
-        edges.addAll(edges);
+        return isCancelled;
+    }
+
+    public void shutDown()
+    {
+        pool.shutdown();
+    }
+
+    public synchronized void threadDone() throws ExecutionException, InterruptedException
+    {
+        threadCount++;
+
+        if(threadCount % 3 ==0)
+        {
+            Platform.runLater(() ->
+            {
+                tsCalc.setEnd("End calculating");
+                application.setTextNrEdges("" + koch.getNrOfEdges());
+                application.setTextCalc(tsCalc.toString());
+
+                drawEdges();
+
+            });
+        }
+    }
+
+    public synchronized void addAllEdges(ArrayList<Edge>edgesList)
+    {
+        edges.addAll(edgesList);
+
+        if(leftEdge.isDone() && rightEdge.isDone() && bottomEdge.isDone() &&!isCancelled)
+        {
+            cancel();
+            Platform.runLater(() ->
+            {
+                tsCalc.setEnd("End calculating");
+                application.setTextNrEdges("" + koch.getNrOfEdges());
+                application.setTextCalc(tsCalc.toString());
+                application.requestDrawEdges();
+
+            });
+        }
     }
 
 }
