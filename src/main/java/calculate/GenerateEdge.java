@@ -26,7 +26,7 @@ public class GenerateEdge extends Task<ArrayList<Edge>> implements Observer
 
         this.manager = ma;
         this.type = type;
-        
+
         koch.setLevel(nxt);
         koch.addObserver(this);
 
